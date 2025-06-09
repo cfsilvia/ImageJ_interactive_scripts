@@ -1,0 +1,6 @@
+This program for imagej:
+is for the counting of cells, nucleus and fibers in fluorescence images acquired
+with the Olympus scan slide microscope.
+
+To run open in imagej
+MainProgramPVN_.ijm
