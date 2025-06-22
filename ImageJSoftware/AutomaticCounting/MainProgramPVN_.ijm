@@ -67,67 +67,67 @@ MontageEverythingWithoutSorting  =  Dialog.getCheckbox();
 
 
 if (a){
-    runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/ConvertToTiff.ijm");} 
+    runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/ConvertToTiff.ijm");} 
      
 if (b){
-    runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/ChangeContrastTiff_.ijm");} 
+    runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/ChangeContrastTiff_.ijm");} 
 
 if (c){
-	runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/SelectRegionsVs4_.ijm");
+	runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/SelectRegionsVs4_.ijm");
 	// runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/SelectRegionsVs3_.ijm");
     //runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/SelectRegions.ijm");
     }   
 if (grid){
-    runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/CreateRoiGrid_.ijm");}     //for grid creating
+    runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/CreateRoiGrid_.ijm");}     //for grid creating
 
 if (onlycfos){
 	//runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/CountCellOnlyiCfosvs13_.ijm");
-	runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/CountCellOnlyROIiCfosvs13_.ijm");
+	runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/CountCellOnlyROIiCfosvs13_.ijm");
 	
 	}  //only for the counting of cfos  over a grid of rois (prepared for blind moles-also other rois
 
 
 if (d){
-	runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/CountCells13_.ijm");}
+	runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/CountCells13_.ijm");}
 	
 if (e){	
-    runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/CountCellsCfosvs13_vs2.ijm");
+    runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/CountCellsCfosvs13_vs2.ijm");
      //runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/CountCellsDapiCfosvs13_.ijm");
     }          
 
 if (f){
-	runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/CountOxytocinVirusv13_.ijm");
+	runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/CountOxytocinVirusv13_.ijm");
 	//runMacro("\PVNAutomatic\\CountOxytocinVirusv12_.ijm");
  	//runMacro("\PVNAutomatic\\CountOxytocinVirusv11_.ijm"); 
  	//runMacro("\PVNAutomatic\\CountOxytocinVirusv5_.ijm"); 
  }
 
 if(fiber){
-	runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/MainFibersSegmentation_.ijm");}
+	runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/MainFibersSegmentation_.ijm");}
 
  
 if (g){
-   runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/IntensityCalibration.ijm"); 
+   runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/IntensityCalibration.ijm"); 
 }
 //if (h){
   // runMacro("\PVNAutomatic\\ReplaceFileNames.ijm"); 
 //}
 if (i){
-   runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/concatenate.ijm"); 
+   runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/concatenate.ijm"); 
 
 }
 if (k){
-   runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/concatenateWithRoivs2.ijm"); 
+   runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/concatenateWithRoivs2.ijm"); 
 }
 if (roisize){
-   runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/FindRoiSize.ijm"); 
+   runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/FindRoiSize.ijm"); 
 }
 if(filechange){
-   runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/ReplaceFileNames.ijm"); 
+   runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/ReplaceFileNames.ijm"); 
 }
 
 if(SetIntensity){
-	 runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/ChangeContrastAutomaticTiff_.ijm"); // change automatic the contrast
+	 runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/ChangeContrastAutomaticTiff_.ijm"); // change automatic the contrast
 }
 
 if(OverlayRois){
@@ -135,7 +135,7 @@ if(OverlayRois){
 }
 
 if(ReviewRois){
-	 runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/Review_the_ROIS.ijm"); // overlay rois 
+	 runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/Review_the_ROIS.ijm"); // overlay rois 
 }
 
 
