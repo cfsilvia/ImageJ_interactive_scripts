@@ -13,24 +13,28 @@ function FindIndex(Num,NumberSlideBegin ) {
 
 
 ///////////////////////////////////--------
-/// Open overlay pictures and do montage
+/// Open overlay pictures and do montage-can choose if to do overlay of Roi or not
 //Open directory of the pictures
- inputDir = getDirectory("Choose the input  tif directory");
- inputDirRoi = getDirectory("Choose the directory of Roi selection regions");
+ inputDir = getDirectory("Choose the input  tif directory- with pictures,Roi folders");
+ //inputDirRoi = getDirectory("Choose the directory of Roi selection regions");
  //////////////////////////////////////////////////////
 title = "Choose channel to select the desired regions";
 Dialog.create(title);
 Dialog.addChoice("Type:", newArray("Dapi", "Cfos", "Cherry", "Oxytocin","Vasopresin","TH","Fibers","Overlay 2 channels","Overlay 3 channels","Others")); //this is the name of the folder
-Dialog.addCheckbox("Sort the slides according to the last number", false);
+Dialog.addCheckbox("Sort the slides according to the first number", false);
 Dialog.addCheckbox("Choose the slide to do montage", false);
 Dialog.addNumber("From which slide to begin:", 1);
 Dialog.addNumber("From which slide to finish:", 1);
+Dialog.addCheckbox("Choose add ROI regions to each slide",false);
+Dialog.addCheckbox("Choose add cell labels to each slide",false);
 Dialog.show();
 type = Dialog.getChoice();
 sorting = Dialog.getCheckbox();
 choosing = Dialog.getCheckbox();
 NumberSlideBegin = Dialog.getNumber();
 NumberSlideFinish = Dialog.getNumber();
+addRoiRegion = Dialog.getCheckbox();
+addLabelsCells = Dialog.getCheckbox();
 ///////////////////////////////////////////////////////////
 if(type == "Overlay 2 channels"){
 Dialog.create("Choose 2 channels to overlay");	
@@ -66,10 +70,14 @@ if(sorting) {
 //////        Sort file ///////////  
 
  for(i = 0; i < largo; i++) { 
-     a = substring(FileList[i], 0, lastIndexOf(FileList[i], "."));
-     IndexAux = lastIndexOf(a, "_");
-     num = substring(a, IndexAux+1);
+ 	 
+     //waitForUser('stop');
+     a = substring(FileList[i], 0, indexOf(FileList[i], "_"));
+     //IndexAux = lastIndexOf(a, "_");
+    // num = substring(a, IndexAux+1);
      //New[i] = a;
+     
+     num = a;
      Num[i] = parseInt(num);
     }
  
@@ -92,8 +100,12 @@ final  = FindIndex (Num,NumberSlideFinish)+1;
 //
  j=0;
  Names=newArray(largo);
+ titles=newArray(largo);
+ opts = "title=[MyStack]";
  // loop over the desired range
 for (i=initial-1; i < final; i++) { //loop over the images
+print(initial-1);
+print(final);
 showProgress(i+1, FileList.length);	
 print(i);
 print(FileList[i]);
@@ -119,6 +131,8 @@ if(type =="Overlay 2 channels"){
     //Add the roi
 selectWindow("OverlayF");
 roiManager("open", inputDirRoi  + NameExp + ".zip" );
+print(inputDirRoi  + NameExp);
+//waitForUser('stop');
 //roiManager("Show All without labels");
 roiManager("Set Color", "red");
 roiManager("Set Line Width", 4);
@@ -181,42 +195,118 @@ run("Labels...", "color=orange font=100 show use");
 	rename("Overlay1");
 	selectWindow("Overlay1");
 	nameFile = substring(FileList[i], 0, indexOf(FileList[i], ".tif")); //get file name
+	print(nameFile);
+	//waitForUser('stop1');
+
 	//add text 
     setFont("SansSerif", 200, " antialiased");
     makeText(nameFile, 50, 100);
     run("Flatten");
-    rename("image"+j);
-    close("Overlay1");
+    
+    rename("OverlayF");
+    //Add the roi
+    selectWindow("OverlayF");
+   
+   ///////////////
+   if(addRoiRegion){
+    //open roi
+    print(inputDir + "ROI\\" + "RoiSet" + NameExp  +  ".zip");
+   // waitForUser('stop');
+
+    roiManager("open", inputDir + "ROI\\" + "RoiSet" + NameExp  +  ".zip" );
+    roiManager("Set Color", "yellow");
+   roiManager("Set Line Width", 4);
+   roiManager("Show All with labels");
+   
+//roiManager("List");
+   run("Labels...", "color=orange font=100 show use");
+   run("Flatten");
+   }
+      rename("OverlayF-1");
+   roiManager("reset");
+   close("OverlayF");
+   close("Overlay1");
+    //////////////////////////////
+   
+if(addLabelsCells){
+    print(inputDirRoi  + NameExp + "\\" + NameExp + "_" + type + "_AVPV" + ".zip");
+   // waitForUser('stop');
+    
+    if(File.exists(inputDirRoi  + NameExp + "\\" + NameExp + "_" + type + "_AVPV" + ".zip")){
+    path = inputDirRoi  + NameExp + "\\" + NameExp + "_" + type + "_AVPV" + ".zip";
+     javaPath = replace(path, "\\", "\\\\");  
+
+    // 3) count only .roi files inside the ZIP using JavaScript if there are roifile
+    roiCount = parseInt(eval("js",
+        // import ZipFile and iterate entries
+        "var ZipFile = Packages.java.util.zip.ZipFile;\n" +
+        "var zf = new ZipFile(\"" + javaPath + "\");\n" +
+        "var e = zf.entries();\n" +
+        "var cnt = 0;\n" +
+        "while (e.hasMoreElements()) {\n" +
+        "  var ze = e.nextElement();\n" +
+        "  if (!ze.isDirectory() && ze.getName().toLowerCase().endsWith('.roi')) cnt++;\n" +
+        "}\n" +
+        "zf.close();\n" +
+        "// return as string so IJM can parse it\n" +
+        "cnt + '';\n"
+    ));
+    
+    
+    if( roiCount > 0){
+    roiManager("reset");
+    //waitForUser('stop-f');
+    selectWindow("OverlayF-1");
+    roiManager("open", inputDirRoi  + NameExp + "\\" + NameExp + "_" + type + "_AVPV" + ".zip" );
+    
+//roiManager("Show All without labels");
+   roiManager("Set Color", "red");
+   roiManager("Set Line Width", 4);
+   roiManager("Show All without labels");
+//roiManager("List");
+ //  run("Labels...", "color=orange font=100 show use");
+   run("Flatten");
+    //////////////////////////////
+     rename("image"+j);
+     
+     close("OverlayF-1");
+     roiManager("reset");
+    }else{
+    	 selectWindow("OverlayF-1");
+    	 rename("image"+j);
+    	 run("Flatten");
+    	  //waitForUser('stop1');
+    	  
+          close("OverlayF-1");
+          roiManager("reset");
+    }
+    }
+} else {
+    selectWindow("OverlayF-1");
+    	 rename("image"+j);
+    close("OverlayF-1");
+          roiManager("reset");}
+    
+    
+  
     
 	}
+ titles[j] = "image"+j;
+ opts += " image" + (j+1) + "=[" + titles[j] + "]";
 
 
-
-rename("image"+j);
-
-
-
-if(j == 1)
-{
-	new1 ="image"+(j-1);
-	new2 ="image"+j;
-	run("Concatenate...", "open image1=[new1] image2=[new2] ");
-    rename("Concatenate");
-    close(new1);
-    close(new2);
- }
- if(j > 1) {
- 	new ="image"+j;
- //	//print(new);
-  run("Concatenate...", "open image1=[Concatenate] image2=[new] ");
-   rename("Concatenate");
-    close(new);
- }
  j = j+1;
-
+ roiManager("reset");
   }
 
+run("Concatenate...", opts);
+//waitForUser('stop');
 print(Math.ceil(j/6));
  rowss = Math.ceil(j/6);
 run("Make Montage...", "columns=6 rows=rowss scale=0.25 label");
+montageTitle = getTitle();
+outputPath = inputDir + "Montage_" + NameExp + ".tif";
+selectWindow(montageTitle);
+saveAs("Tiff", outputPath);
+
 //setBatchMode(false);

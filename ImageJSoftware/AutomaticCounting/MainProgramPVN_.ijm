@@ -117,7 +117,7 @@ if (i){
 
 }
 if (k){
-   runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/concatenateWithRoi.ijm"); 
+   runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/concatenateWithRoivs2.ijm"); 
 }
 if (roisize){
    runMacro("X:/Users/LabSoftware/ImageJSoftware/AutomaticCounting/FindRoiSize.ijm"); 
