@@ -9,6 +9,8 @@ var doSort, doChooseRange;
 var slideBegin, slideEnd;
 var addRoiRegions, addCellLabels;
 var sortedNums; // Numeric indices after sorting slides
+var roiColor, showRoiLabels;
+var roiFromAtlas;
 
 function main() {
     showMainDialog();
@@ -34,6 +36,8 @@ function showMainDialog() {
     Dialog.addCheckbox("Add ROI regions", false);
     Dialog.addCheckbox("Add cell labels", false);
     Dialog.addCheckbox("ROI from Atlas", false);
+    Dialog.addCheckbox("Show ROI names", true);
+    Dialog.addChoice("ROI color", newArray("yellow", "red", "green", "blue", "orange", "cyan", "magenta"));
     Dialog.show();
 
     channelType   = Dialog.getChoice();
@@ -44,6 +48,8 @@ function showMainDialog() {
     addRoiRegions = Dialog.getCheckbox();
     addCellLabels = Dialog.getCheckbox();
     roiFromAtlas = Dialog.getCheckbox();
+    showRoiLabels = Dialog.getCheckbox();
+    roiColor = Dialog.getChoice();
     
     if(!roiFromAtlas){
     roiDir   = inputDir + "ROI/";
@@ -98,6 +104,7 @@ function getProcessingRange(files) {
 
 function processFiles(files, startIdx, endIdx) {
     var cnt = 0;
+  
     for (var i=startIdx; i<endIdx; i++) {
         showProgress(i+1, lengthOf(files));
         var name = substring(files[i], 0, lastIndexOf(files[i], "."));
@@ -129,8 +136,10 @@ function processSingle(fname, base, idx) {
     selectWindow("Img");
     annotateAndRoi(base);
     
-    if(addCellLabels){
+    if(addCellLabels && !roiFromAtlas){
       annotateAddCellLabels(fname,base,idx);
+      }else{
+      	annotateAddCellLabels_Atlas(fname,base,idx);
       }
     renameAndClose(idx);
     
@@ -148,10 +157,14 @@ function annotateAndRoi(base) {
         if (File.exists(rf)) {
         	roiManager("reset");
             roiManager("open", rf);
-            roiManager("Set Color", "yellow");
+            roiManager("Set Color", roiColor);
             roiManager("Set Line Width", 4);
-            roiManager("Show All with labels");
-            run("Labels...", "color=orange font=100 show use");
+            if (showRoiLabels) {
+                roiManager("Show All with labels");
+                run("Labels...", "color=" + roiColor + " font=100 show use");
+           } else {
+               roiManager("Show All without labels");
+           }
             run("Flatten");
            
             roiManager("reset");
@@ -173,7 +186,9 @@ function renameAndClose(i) {
 }
 
 function createMontage(count, last) {
-    var cols = 6;
+	var c  = floor(sqrt(count));
+	if (c*c < count) c = c + 1;
+    var cols = c;
     // IJM has no ceil; use floor((count+cols-1)/cols) to compute rows
     var rows = floor((count + cols - 1) / cols);
     
@@ -217,6 +232,35 @@ function annotateAddCellLabels(fname,base,idx){
 	
 	
 }
+
+function annotateAddCellLabels_Atlas(fname,base,idx){
+	//find the files  inside the folder which have the channel type between the name and the last _
+	    var ldir = labelsDir;
+	    var files_to_use =  base + ".zip";
+		roi_count = check_roi(files_to_use, ldir);
+		 if( roi_count > 0){
+            roiManager("reset");
+            selectWindow("Img2");
+            //waitForUser("stop");
+            print(ldir + files_to_use);
+           // waitForUser("stop");
+            roiManager("open", ldir + files_to_use );
+            roiManager("Set Color", "red");
+            roiManager("Set Line Width", 4);
+            roiManager("Show All without labels");
+            run("Flatten");
+            
+           //waitForUser("stop");
+		 }
+	
+	
+	
+}
+
+
+
+
+
 
 function select_files(files){
 	// select the pertinent files with only one channel type

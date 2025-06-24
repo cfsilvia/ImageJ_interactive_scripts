@@ -19,8 +19,8 @@ Dialog.addMessage("	HELP FUNCTIONS", false);
 Dialog.addMessage(" ");
 Dialog.addCheckbox("	Calibrate the intensity of a stack of images:", false);
 //Dialog.addCheckbox("	Change name of files with points", false);
-Dialog.addCheckbox("	Do montage of one channel/or 2 overlay channels", false);
-Dialog.addCheckbox("	Do montage of one channel/or 2 overlay channels  with ROI", false);
+//Dialog.addCheckbox("	Do montage of one channel/or 2 overlay channels", false);
+Dialog.addCheckbox("	Do montage of one channel/or 2 overlay channels  with/without ROI/labels", false);
 Dialog.addCheckbox("	Find rois's size", false);
 Dialog.addCheckbox("	Replace the file name of vsi files with sortfile", false);
 Dialog.addCheckbox("	Set up automatic the same intensity to every region", false);
@@ -49,7 +49,7 @@ f = Dialog.getCheckbox();
 fiber = Dialog.getCheckbox(); 
 g = Dialog.getCheckbox(); 
 //h = Dialog.getCheckbox(); 
-i = Dialog.getCheckbox();
+//i = Dialog.getCheckbox();
 k= Dialog.getCheckbox();
 roisize = Dialog.getCheckbox();
 filechange = Dialog.getCheckbox();
@@ -112,10 +112,10 @@ if (g){
 //if (h){
   // runMacro("\PVNAutomatic\\ReplaceFileNames.ijm"); 
 //}
-if (i){
+/*if (i){
    runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/concatenate.ijm"); 
 
-}
+}*/
 if (k){
    runMacro("C:/LabSoftware/ImageJSoftware/AutomaticCounting/concatenateWithRoivs2.ijm"); 
 }
