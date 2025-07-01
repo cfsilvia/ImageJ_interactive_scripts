@@ -11,6 +11,10 @@ var addRoiRegions, addCellLabels;
 var sortedNums; // Numeric indices after sorting slides
 var roiColor, showRoiLabels;
 var roiFromAtlas;
+var fluorophores;
+var processedImages = newArray();
+var adjustContrast;
+
 
 function main() {
     showMainDialog();
@@ -20,8 +24,10 @@ function main() {
     var startIdx = range[0];
     var endIdx   = range[1];
     var count    = range[2];
+   setBatchMode(true);
     processFiles(files, startIdx, endIdx);
     createMontage(count, files[endIdx-1]);
+   setBatchMode(false);
 }
 
 function showMainDialog() {
@@ -38,6 +44,7 @@ function showMainDialog() {
     Dialog.addCheckbox("ROI from Atlas", false);
     Dialog.addCheckbox("Show ROI names", true);
     Dialog.addChoice("ROI color", newArray("yellow", "red", "green", "blue", "orange", "cyan", "magenta"));
+    Dialog.addCheckbox("adjust contrast", false);
     Dialog.show();
 
     channelType   = Dialog.getChoice();
@@ -50,6 +57,8 @@ function showMainDialog() {
     roiFromAtlas = Dialog.getCheckbox();
     showRoiLabels = Dialog.getCheckbox();
     roiColor = Dialog.getChoice();
+    adjustContrast = Dialog.getCheckbox();
+    fluorophores = newArray("Dapi","Cfos","Cherry","Oxytocin","Vasopresin","TH","Fibers","OTR");
     
     if(!roiFromAtlas){
     roiDir   = inputDir + "ROI/";
@@ -104,6 +113,7 @@ function getProcessingRange(files) {
 
 function processFiles(files, startIdx, endIdx) {
     var cnt = 0;
+    
   
     for (var i=startIdx; i<endIdx; i++) {
         showProgress(i+1, lengthOf(files));
@@ -111,13 +121,15 @@ function processFiles(files, startIdx, endIdx) {
         if (channelType=="Overlay 2")   processOverlay(files[i], 2, name, cnt);
         else if (channelType=="Overlay 3") processOverlay(files[i], 3, name, cnt);
         else processSingle(files[i], name, cnt);
+        
         cnt++;
+        
     }
 }
 
 function processOverlay(fname, n, base, idx) {
     for (var c=0; c<n; c++) {
-        open(inputDir + overlayTypes[c] + "/" + fname);
+        run("TIFF Virtual Stack...", "open= [" + inputDir + overlayTypes[c] + "/" + fname + "]");
         rename("L"+c);
         if (c>0) {
             selectWindow("L0");
@@ -131,14 +143,19 @@ function processOverlay(fname, n, base, idx) {
 
 function processSingle(fname, base, idx) {
 	var files_to_use = newArray();
-    open(inputDir + channelType + "/" + fname);
+    run("TIFF Virtual Stack...", "open=[" + inputDir + channelType + "/" + fname + "]");
+    print(inputDir + channelType + "/" + fname);
     rename("Img");
     selectWindow("Img");
+    if(adjustContrast){
+    	run("Enhance Contrast", "saturated=0.35");
+    	}
+    
     annotateAndRoi(base);
     
     if(addCellLabels && !roiFromAtlas){
       annotateAddCellLabels(fname,base,idx);
-      }else{
+      }else if (addCellLabels && roiFromAtlas){
       	annotateAddCellLabels_Atlas(fname,base,idx);
       }
     renameAndClose(idx);
@@ -154,6 +171,7 @@ function annotateAndRoi(base) {
     selectWindow("Img1");
     if (addRoiRegions) {
         var rf = roiDir + "RoiSet" + base + ".zip";
+        
         if (File.exists(rf)) {
         	roiManager("reset");
             roiManager("open", rf);
@@ -169,6 +187,7 @@ function annotateAndRoi(base) {
            
             roiManager("reset");
         }
+        
     }
     rename("Img2");
     //waitForUser("stop1");
@@ -178,25 +197,46 @@ function renameAndClose(i) {
     // Keep the processed image open for concatenation
    
     rename("image" + i);
+    saveAs("Tiff", inputDir + "processed_" + i + ".tif");
+    processedImages = Array.concat(processedImages, "processed_" + i + ".tif");
     close("Img");
     close("Img1");
     close("Img2");
+    run("Close All");
    
     // Do not close here to allow Concatenate to access all image windows
 }
 
+
+
+
 function createMontage(count, last) {
-	var c  = floor(sqrt(count));
-	if (c*c < count) c = c + 1;
+    // Open all saved images for montage
+    for (var i = 0; i < count; i++) {
+        run("TIFF Virtual Stack...", "open=[" + inputDir + "processed_" + i + ".tif" + "]");
+        rename("image" + i);
+    }
+
+    // Calculate grid size
+    var c  = floor(sqrt(count));
+    if (c * c < count) c = c + 1;
     var cols = c;
-    // IJM has no ceil; use floor((count+cols-1)/cols) to compute rows
     var rows = floor((count + cols - 1) / cols);
-    
+
+    // Build concatenation options
     var opts = "title=[MyStack]";
-    for (var i=0; i<count; i++) opts += " image"+(i+1)+"=[image"+i+"]";
+    for (var i = 0; i < count; i++) {
+        opts += " image" + (i + 1) + "=[image" + i + "]";
+    }
+
     run("Concatenate...", opts);
-    run("Make Montage...", "columns="+cols+" rows="+rows+" scale=0.25 label");
-    saveAs("Tiff", inputDir+"Montage_"+last+".tif");
+    run("Make Montage...", "columns=" + cols + " rows=" + rows + " scale=0.25 label");
+    saveAs("Tiff", inputDir + "Montage_" + last + ".tif");
+
+    // 🧹 Delete temporary processed TIFFs from disk
+    for (var i = 0; i < count; i++) {
+        File.delete(inputDir + "processed_" + i + ".tif");
+    }
 }
 
 function FindIndex(arr, val) {
@@ -211,24 +251,31 @@ function annotateAddCellLabels(fname,base,idx){
 	//find the files  inside the folder which have the channel type between the name and the last _
 	var ldir = labelsDir + base + "/";
 	var files = getFileList(ldir);
-	var files_to_use = select_files(files);
+	var files_to_use = select_files(files,base);
+	roiManager("reset");
 	for(var i=0; i<lengthOf(files_to_use); i++){
 		roi_count = check_roi(files_to_use[i], ldir);
 		 if( roi_count > 0){
-            roiManager("reset");
-            selectWindow("Img2");
+		 	print(ldir + files_to_use[i]);
+		 	roiManager("open", ldir + files_to_use[i] ); //fill roi manager with all the rois
+		 	 }
+	}
+    selectWindow("Img2");
+    //waitForUser("stop");
+            
             //waitForUser("stop");
-            print(ldir + files_to_use[i]);
-            //waitForUser("stop");
-            roiManager("open", ldir + files_to_use[i] );
-            roiManager("Set Color", "red");
-            roiManager("Set Line Width", 4);
-            roiManager("Show All without labels");
-            run("Flatten");
+    setBatchMode(false);
+            
+    roiManager("Set Color", "red");
+    roiManager("Set Line Width", 4);
+    roiManager("Show All without labels");
+    run("Flatten");
+    setBatchMode(true);
+    
             
            //waitForUser("stop");
-		 }
-	}
+		
+	
 	
 	
 }
@@ -259,27 +306,34 @@ function annotateAddCellLabels_Atlas(fname,base,idx){
 
 
 
-
-
-
-function select_files(files){
-	// select the pertinent files with only one channel type
-	var prefix = base + "_" + channelType + "_";
-	var ext = ".zip";
-	var extLen = lengthOf(ext);
-	var files_to_use = newArray();
-	
-	for (var i=0; i<lengthOf(files); i++) {
-	   var f = files[i];
-	   if (lastIndexOf(prefix,"_")==lastIndexOf(f,"_")) {
-	   files_to_use = Array.concat(files_to_use, f);
-     }
-	}
-	//Array.print(files_to_use);
-	//waitForUser('stop');
-
-	return files_to_use;
-	
+function select_files(files,base){
+   // print(base);
+    // build the exact prefix and suffix
+    var prefix       = base + "_" + channelType + "_";
+    var ext          = ".zip";
+    var nPref        = lengthOf(prefix);
+    var nExt         = lengthOf(ext);
+    var files_to_use = newArray();
+    
+    for (var i = 0; i < lengthOf(files); i++) {
+        var f = files[i];
+        // 1) must start with base_channel_ and end with .zip
+        if (substring(f, 0, nPref) == prefix && substring(f, lengthOf(f) - nExt, lengthOf(f)) == ext) {
+            // 2) ensure no other fluorophore name appears in the filename
+            var ok = true;
+            for (var j = 0; j < lengthOf(fluorophores); j++) {
+                var fluor = fluorophores[j];
+                if (fluor != channelType && indexOf(f, fluor) >= 0) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) {
+                files_to_use = Array.concat(files_to_use, f);
+            }
+        }
+    }
+    return files_to_use;
 }
 
 function check_roi(f,ldir){
